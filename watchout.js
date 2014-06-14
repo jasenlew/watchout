@@ -5,7 +5,7 @@ var height = 600;
 var heroColor = 'white';
 var enemyColor = 'green';
 var radius = 10;
-var numEnemies = 50;
+var numEnemies = 5;
 var moveDelay = 2000;
 
 var minHeroX = radius;
@@ -148,6 +148,7 @@ var moveAsteroids = function() {
     .tween('jasenAndGregoryRule', function (d, i) {
       var el = d3.select(this);
       return function (t) {
+        rotateEnemy(el, t);
         if (checkCollision(el)) {
           resetScoreboard();
         }
@@ -161,6 +162,14 @@ var moveAsteroids = function() {
     .attr('xlink:href','asteroid.png')
     .attr('class', 'enemy');
   setTimeout(moveAsteroids, moveDelay);
+};
+
+var rotateEnemy = function (el, t) {
+  var x = +el.attr('x') + radius;
+  var y = +el.attr('y') + radius;
+  var rotation = t * 720;
+
+  el.attr('transform', 'rotate(' + rotation + ',' + x + ',' + y + ')');
 };
 
 moveAsteroids();
