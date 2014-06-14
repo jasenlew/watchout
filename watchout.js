@@ -2,17 +2,19 @@
 
 var width = 800;
 var height = 600;
-var heroColor = 'black';
+var heroColor = 'white';
 var enemyColor = 'green';
-var circleRadius = 10;
+var radius = 10;
 var numEnemies = 50;
 var moveDelay = 2000;
 
-var minHeroX = circleRadius;
-var maxHeroX = width - circleRadius;
+var minHeroX = radius;
+var maxHeroX = width - radius;
 
-var minHeroY = circleRadius;
-var maxHeroY = height - circleRadius;
+var minHeroY = radius;
+var maxHeroY = height - radius;
+
+var hasCollidedRecently = false;
 
 //Get reference to (and create) svg element with nested 'g' element
 var svg = d3.select('body').append('svg').attr('width', width)
@@ -20,15 +22,15 @@ var svg = d3.select('body').append('svg').attr('width', width)
   .append('g')
     .attr('fill', enemyColor);
 
-//Get reference to circle elements in 'g' element
-var circles = svg.selectAll('circle');
+//Get reference to asteroid elements in 'g' element
+var asteroids = svg.selectAll('img');
 
-//Adds a hero circle after all the other guys have been selected
+//Adds a hero asteroid after all the other guys have been selected
 var hero = svg
   .append('circle')
   .attr('class', 'hero')
   .attr('fill', heroColor)
-  .attr('r', circleRadius)
+  .attr('r', radius)
   .attr('cx', width/2)
   .attr('cy', height/2);
 
@@ -70,35 +72,45 @@ var drag = d3.behavior.drag().on('drag', dragHero);
 
 hero.call(drag);
 
-//Update the circle data to have new random positions
-var updateWithRandomCircleData = function () {
+//Update the asteroid data to have new random positions
+var updateWithRandomAsteroidData = function () {
   var data = [];
 
   for (var i = 0; i < numEnemies; i++) {
     var attrs = {};
-    attrs['cx'] = Math.random() * (width - circleRadius * 2) + circleRadius;
-    attrs['cy'] = Math.random() * (height - circleRadius * 2) + circleRadius;
+    attrs['x'] = Math.random() * (width - radius * 2);
+    attrs['y'] = Math.random() * (height - radius * 2);
+
     data.push(attrs);
   }
-  circles = circles.data(data);
+  asteroids = asteroids.data(data);
 };
 
-//Updates the circles with new positions
-updateWithRandomCircleData();
+//Updates the asteroids with new positions
+updateWithRandomAsteroidData();
 
-//Appends circles to dom
-circles.enter().append('circle');
+//Appends asteroids to dom
+asteroids.enter().append('image');
 
 //Check collision for the given enemy
 var checkCollision = function (enemyElement) {
-  //check whether enemy and hero collide
-  var xDistance = enemyElement.attr('cx') * 1 - hero.attr('cx') * 1;
-  var yDistance = enemyElement.attr('cy') * 1 - hero.attr('cy') * 1;
+  if (!(hasCollidedRecently)) {
+    //check whether enemy and hero collide
+    var xDistance = enemyElement.attr('x') * 1 + radius - hero.attr('cx') * 1;
+    var yDistance = enemyElement.attr('y') * 1  + radius - hero.attr('cy') * 1;
 
-  // see what is distance between enemy and hero
-  var trueDistance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+    // see what is distance between enemy and hero
+    var trueDistance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
 
-  return trueDistance <= circleRadius * 2;
+    //if there is a collision, flag that a collision has
+    //occurred in this "time step"
+    //(there is a max of one collision per time step)
+    if (trueDistance <= radius * 2) {
+      hasCollidedRecently = true;
+      return true;
+    }
+  }
+  return false;
 };
 
 var resetScoreboard = function () {
@@ -127,10 +139,11 @@ var incrementScoreboard = function() {
 
 setInterval(incrementScoreboard, 50);
 
-//Moves the circles to new random locations
-var moveCircles = function() {
-  updateWithRandomCircleData();
-  circles
+//Moves the asteroids to new random locations
+var moveAsteroids = function() {
+  hasCollidedRecently = false;
+  updateWithRandomAsteroidData();
+  asteroids
     .transition()
     .tween('jasenAndGregoryRule', function (d, i) {
       var el = d3.select(this);
@@ -141,11 +154,13 @@ var moveCircles = function() {
       };
     })
     .duration(moveDelay)
-    .attr('cx', function(d) { return d.cx; })
-    .attr('cy', function(d) { return d.cy; })
-    .attr('r', circleRadius)
+    .attr('x', function(d) { return d.x; })
+    .attr('y', function(d) { return d.y; })
+    .attr('width', radius * 2)
+    .attr('height', radius * 2)
+    .attr('xlink:href','asteroid.png')
     .attr('class', 'enemy');
-  setTimeout(moveCircles, moveDelay);
+  setTimeout(moveAsteroids, moveDelay);
 };
 
-moveCircles();
+moveAsteroids();

@@ -3,12 +3,11 @@
 /* Note: an asteroid image is included in this repo.
 Feel free to use it if you like. */
 
-.enemy {
-  animation:spinAsteroid 10s 5s linear infinite;
+
+.current, .high, .collisions {
+  color:white;
 }
 
-@keyframes spinAsteroid {
-  100% {
-    transform:rotate(3600deg);
-    }
+svg {
+  border:solid 1px white;
 }
